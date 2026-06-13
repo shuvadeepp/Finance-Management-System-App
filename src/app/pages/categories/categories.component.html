@@ -1,0 +1,179 @@
+<div class="ca-wrapper">
+  <div class="ca-inner">
+
+    <!-- Navbar -->
+    <nav class="ca-nav">
+      <div class="ca-nav-brand">
+        <div class="ca-nav-logo">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21.21 15.89A10 10 0 1 1 8 2.83"/><path d="M22 12A10 10 0 0 0 12 2v10z"/>
+          </svg>
+        </div>
+        Finance Management System
+      </div>
+      <div class="ca-nav-right">
+        <span class="ca-role-badge">
+          <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+          {{ role }}
+        </span>
+        <button class="ca-logout-btn" (click)="logout()">
+          <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+          Logout
+        </button>
+      </div>
+    </nav>
+
+    <!-- Page Header -->
+    <div class="ca-page-header">
+      <h1 class="ca-page-title">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#185fa5" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+        </svg>
+        Category management
+      </h1>
+      <span class="ca-breadcrumb">Dashboard / <span>Categories</span></span>
+    </div>
+
+    <!-- Form Card -->
+    <div class="ca-card">
+      <div class="ca-card-header">
+        <div class="ca-card-header-icon ca-icon-blue">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/>
+          </svg>
+        </div>
+        <h5>{{ isEdit ? 'Edit category' : 'Add category' }}</h5>
+      </div>
+      <div class="ca-card-body">
+        <div class="ca-form-grid">
+
+          <div class="ca-form-group">
+            <label>Category name</label>
+            <input
+              type="text"
+              class="ca-input"
+              [class.ca-input-error]="validationErrors.category_name"
+              placeholder="e.g. Food, Salary..."
+              [(ngModel)]="form.category_name">
+            <span class="ca-error-msg" *ngIf="validationErrors.category_name">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              {{ validationErrors.category_name[0] }}
+            </span>
+          </div>
+
+          <div class="ca-form-group">
+            <label>Category type</label>
+            <select
+              class="ca-input"
+              [class.ca-input-error]="validationErrors.category_type"
+              [(ngModel)]="form.category_type">
+              <option value="">Select type</option>
+              <option value="INCOME">Income</option>
+              <option value="EXPENSE">Expense</option>
+            </select>
+            <span class="ca-error-msg" *ngIf="validationErrors.category_type">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+              {{ validationErrors.category_type[0] }}
+            </span>
+          </div>
+
+        </div>
+
+        <div class="ca-btn-row">
+          <button *ngIf="!isEdit" class="ca-btn ca-btn-save" (click)="storeCategory()" [disabled]="saving">
+            <span class="ca-spinner" *ngIf="saving"></span>
+            <svg *ngIf="!saving" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg>
+            {{ saving ? 'Saving...' : 'Save category' }}
+          </button>
+          <button *ngIf="isEdit" class="ca-btn ca-btn-update" (click)="updateCategory()" [disabled]="saving">
+            <span class="ca-spinner" *ngIf="saving"></span>
+            <svg *ngIf="!saving" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+            {{ saving ? 'Updating...' : 'Update category' }}
+          </button>
+          <button class="ca-btn ca-btn-reset" (click)="resetForm()">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="1 4 1 10 7 10"/><path d="M3.51 15a9 9 0 1 0 .49-3.35"/></svg>
+            Reset
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Table Card -->
+    <div class="ca-card">
+      <div class="ca-card-header">
+        <div class="ca-card-header-icon ca-icon-teal">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <line x1="8" y1="6" x2="21" y2="6"/><line x1="8" y1="12" x2="21" y2="12"/>
+            <line x1="8" y1="18" x2="21" y2="18"/><line x1="3" y1="6" x2="3.01" y2="6"/>
+            <line x1="3" y1="12" x2="3.01" y2="12"/><line x1="3" y1="18" x2="3.01" y2="18"/>
+          </svg>
+        </div>
+        <h5>Category list</h5>
+        <span class="ca-count-badge" *ngIf="!loading">{{ categories.length }}</span>
+      </div>
+
+      <!-- Loading Skeleton -->
+      <div class="ca-loading-wrap" *ngIf="loading">
+        <div class="ca-skeleton-row" *ngFor="let i of [1,2,3,4,5]">
+          <div class="ca-skeleton ca-sk-xs"></div>
+          <div class="ca-skeleton ca-sk-lg"></div>
+          <div class="ca-skeleton ca-sk-sm"></div>
+          <div class="ca-skeleton ca-sk-xs"></div>
+          <div class="ca-skeleton ca-sk-md"></div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div class="ca-empty" *ngIf="!loading && categories.length === 0">
+        <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#cbd5e0" stroke-width="1.5">
+          <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"/><line x1="7" y1="7" x2="7.01" y2="7"/>
+        </svg>
+        <p>No categories yet. Add one above.</p>
+      </div>
+
+      <!-- Table -->
+      <div class="ca-table-wrap" *ngIf="!loading && categories.length > 0">
+        <table>
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Category name</th>
+              <th>Type</th>
+              <th>Default</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of categories; let i = index">
+              <td class="ca-id">{{ i+1 }}</td>
+              <td class="ca-name">{{ c.category_name }}</td>
+              <td>
+                <span class="ca-badge ca-badge-income" *ngIf="c.category_type === 'INCOME'">● Income</span>
+                <span class="ca-badge ca-badge-expense" *ngIf="c.category_type === 'EXPENSE'">● Expense</span>
+              </td>
+              <td>
+                <span class="ca-default-yes" *ngIf="c.is_default == 1">
+                  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="20 6 9 17 4 12"/></svg>
+                  Yes
+                </span>
+                <span class="ca-default-no" *ngIf="c.is_default == 0">No</span>
+              </td>
+              <td class="ca-actions">
+                <button class="ca-act-edit" (click)="editCategory(c)">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                  Edit
+                </button>
+                <button class="ca-act-del" (click)="deleteCategory(c.id)">
+                  <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"/><path d="M19 6l-1 14H6L5 6"/><path d="M10 11v6"/><path d="M14 11v6"/><path d="M9 6V4h6v2"/></svg>
+                  Delete
+                </button>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+    </div>
+
+  </div>
+</div>

@@ -1,0 +1,113 @@
+<div class="login-page">
+
+  <!-- ── Left brand panel ── -->
+  <div class="brand-panel">
+    <div class="brand-inner">
+      <div class="brand-logo">
+        <svg width="28" height="28" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+          <path stroke-linecap="round" stroke-linejoin="round" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+        </svg>
+      </div>
+      <h1 class="brand-name">Finance Management<br>System</h1>
+      <p class="brand-tagline">Track budgets, manage expenses,<br>and stay in control.</p>
+
+      <div class="brand-features">
+        <div class="bf-item">
+          <span class="bf-dot"></span>
+          <span>Real-time budget tracking</span>
+        </div>
+        <div class="bf-item">
+          <span class="bf-dot"></span>
+          <span>Category-wise expense reports</span>
+        </div>
+        <div class="bf-item">
+          <span class="bf-dot"></span>
+          <span>Role-based access control</span>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── Right form panel ── -->
+  <div class="form-panel">
+    <div class="form-box">
+
+      <div class="form-header">
+        <h2 class="form-title">Welcome back</h2>
+        <p class="form-sub">Sign in to your account to continue</p>
+      </div>
+
+      <!-- Username -->
+      <div class="field">
+        <label class="field-label">USERNAME</label>
+        <div class="field-wrap" [class.field-error-state]="errors.username">
+          <span class="field-icon">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z"/>
+            </svg>
+          </span>
+          <input
+            type="text"
+            class="field-input"
+            placeholder="Enter your username"
+            [(ngModel)]="form.username"
+            (input)="clearError('username')">
+        </div>
+        <span class="field-err-msg" *ngIf="errors.username">{{ errors.username }}</span>
+      </div>
+
+      <!-- Password -->
+      <div class="field">
+        <label class="field-label">PASSWORD</label>
+        <div class="field-wrap" [class.field-error-state]="errors.password">
+          <span class="field-icon">
+            <svg width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2">
+              <path stroke-linecap="round" stroke-linejoin="round" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"/>
+            </svg>
+          </span>
+          <input
+            [type]="showPass ? 'text' : 'password'"
+            class="field-input"
+            placeholder="Enter your password"
+            [(ngModel)]="form.password"
+            (input)="clearError('password')"
+            (keyup.enter)="login()">
+          <button class="pass-toggle" type="button" (click)="showPass = !showPass" tabindex="-1">
+            <svg *ngIf="!showPass" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"/><path stroke-linecap="round" stroke-linejoin="round" d="M2.458 12C3.732 7.943 7.523 5 12 5c4.478 0 8.268 2.943 9.542 7-1.274 4.057-5.064 7-9.542 7-4.477 0-8.268-2.943-9.542-7z"/></svg>
+            <svg *ngIf="showPass"  width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2"><path stroke-linecap="round" stroke-linejoin="round" d="M13.875 18.825A10.05 10.05 0 0112 19c-4.478 0-8.268-2.943-9.543-7a9.97 9.97 0 011.563-3.029m5.858.908a3 3 0 114.243 4.243M9.878 9.878l4.242 4.242M9.88 9.88l-3.29-3.29m7.532 7.532l3.29 3.29M3 3l3.59 3.59m0 0A9.953 9.953 0 0112 5c4.478 0 8.268 2.943 9.543 7a10.025 10.025 0 01-4.132 5.411m0 0L21 21"/></svg>
+          </button>
+        </div>
+        <span class="field-err-msg" *ngIf="errors.password">{{ errors.password }}</span>
+      </div>
+
+      <!-- API error banner -->
+      <div class="api-error" *ngIf="apiError">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M12 9v2m0 4h.01M10.29 3.86L1.82 18a2 2 0 001.71 3h16.94a2 2 0 001.71-3L13.71 3.86a2 2 0 00-3.42 0z"/></svg>
+        {{ apiError }}
+      </div>
+
+      <!-- Login button -->
+      <button class="btn-login" (click)="login()" [disabled]="loading">
+        <span *ngIf="loading" class="btn-spin"></span>
+        <svg *ngIf="!loading" width="15" height="15" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1"/></svg>
+        {{ loading ? 'Signing in…' : 'Sign In' }}
+      </button>
+
+      <div class="divider"><span>or</span></div>
+
+      <!-- Register link -->
+      <button class="btn-register" routerLink="/register">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+        Create a new account
+      </button>
+        
+      <!-- Register link -->
+      <button class="btn-register" routerLink="/forgot-password">
+        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="currentColor" stroke-width="2.5"><path stroke-linecap="round" stroke-linejoin="round" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z"/></svg>
+        Forgot Password
+      </button>
+
+    </div>
+  </div>
+
+</div>

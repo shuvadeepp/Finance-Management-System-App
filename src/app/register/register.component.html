@@ -1,0 +1,109 @@
+<div class="container mt-5">
+
+    <div class="row justify-content-center">
+
+        <div class="col-md-6">
+
+            <div class="card shadow-lg border-0">
+
+                <div class="card-header bg-primary text-white text-center">
+
+                    <h3 class="mb-0">
+                        User Registration
+                    </h3>
+
+                </div>
+
+                <div class="card-body">
+
+                    <!-- Username -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label fw-bold">
+                            Username
+                        </label>
+
+                        <input
+                            type="text"
+                            class="form-control"
+                            placeholder="Enter Username"
+                            [(ngModel)]="username">
+
+                    </div>
+
+                    <!-- Password -->
+
+                    <div class="mb-3">
+
+                        <label class="form-label fw-bold">
+                            Password
+                        </label>
+
+                        <input
+                            type="password"
+                            class="form-control"
+                            placeholder="Enter Password"
+                            [(ngModel)]="password">
+
+                    </div>
+
+                    <!-- Role -->
+
+                    <div class="mb-4">
+
+                        <label class="form-label fw-bold">
+                            Role
+                        </label>
+
+                        <select
+                            class="form-select"
+                            [(ngModel)]="role">
+
+                            <option value="ADMIN">
+                                Admin
+                            </option>
+
+                            <option value="MANAGER">
+                                Manager
+                            </option>
+
+                            <option value="EMPLOYEE">
+                                Employee
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                    <!-- Buttons -->
+
+                    <div class="d-grid gap-2">
+
+                        <button
+                            class="btn btn-success"
+                            (click)="register()">
+
+                            Register
+
+                        </button>
+
+                        <button
+                            class="btn btn-secondary"
+                            routerLink="/login">
+
+                            Back To Login
+
+                        </button>
+
+                    </div>
+
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
