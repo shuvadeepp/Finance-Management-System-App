@@ -49,11 +49,11 @@ Route::middleware(['jwt.role:MANAGER'])->group(function () {
     Route::post('/assign-project', [AssignmentController::class, 'assign']);
 });
 
-Route::middleware(['jwt.role:ADMIN,MANAGER,EMPLOYEE'])->group(function () {
+Route::middleware(['jwt.role:ADMIN,MANAGER,EMPLOYEE,GIT USER'])->group(function () {
 
     Route::get('/assigned-projects', [AssignmentController::class, 'assignedProjects']);
 });
-Route::middleware(['jwt.role:ADMIN,MANAGER,EMPLOYEE',
+Route::middleware(['jwt.role:ADMIN,MANAGER,EMPLOYEE,GIT USER',
     'throttle:60,1'])->group(function () {
     Route::get('/categories', [CategoryController::class, 'index']);
     Route::get('/categories/default', [CategoryController::class, 'defaultCategories']);
@@ -63,7 +63,7 @@ Route::middleware(['jwt.role:ADMIN,MANAGER,EMPLOYEE',
     Route::delete('/categories/{id}', [CategoryController::class, 'destroy']);
 });
 
-Route::middleware(['jwt.role:ADMIN,MANAGER,EMPLOYEE',
+Route::middleware(['jwt.role:ADMIN,MANAGER,EMPLOYEE,GIT USER',
     'throttle:60,1'])->group(function () {
 
     Route::get('/transactions', [TransactionController::class, 'index']);
@@ -73,7 +73,7 @@ Route::middleware(['jwt.role:ADMIN,MANAGER,EMPLOYEE',
     Route::get('/transactions/{id}', [TransactionController::class, 'show']);
 });
 
-Route::middleware(['jwt.role:ADMIN,MANAGER,EMPLOYEE',
+Route::middleware(['jwt.role:ADMIN,MANAGER,EMPLOYEE,GIT USER',
     'throttle:60,1'])->group(function () {
     Route::get('/budgets', [BudgetController::class,'index']);
     Route::post('/budgets', [BudgetController::class,'store']);
@@ -84,11 +84,15 @@ Route::middleware(['jwt.role:ADMIN,MANAGER,EMPLOYEE',
 });
 
 
-Route::middleware(['jwt.role:ADMIN,MANAGER,EMPLOYEE',
+Route::middleware(['jwt.role:ADMIN,MANAGER,EMPLOYEE,GIT USER',
     'throttle:60,1'])->group(function () {
     Route::get(
         '/dashboard',
         [DashboardController::class, 'index']
     );
- 
+
 });
+
+
+Route::get('/auth/github/redirect', [AuthController::class, 'githubRedirect']);
+Route::get('/auth/github/callback', [AuthController::class, 'githubCallback']);

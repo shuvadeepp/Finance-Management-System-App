@@ -12,6 +12,7 @@ use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Facades\Validator; 
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
+use Laravel\Socialite\Facades\Socialite;
 
 class AuthController extends Controller
 {
@@ -223,6 +224,77 @@ class AuthController extends Controller
         ]);
     }
 
+    public function githubRedirect() {
+        
+        // Stateless important hai kyunki yeh REST API hai
+        // 'prompt' => 'login' force karta hai GitHub ko dobara login screen dikhane ke liye,
+        // taaki already-logged-in session se same account auto-select na ho
+        $url = Socialite::driver('github')->stateless()
+            ->with(['prompt' => 'login'])
+            ->redirect()->getTargetUrl();
+        
+        return response()->json(['url' => $url]);
+    }
 
+
+    public function githubCallback() {
+
+        try {
+            $githubUser = Socialite::driver('github')->stateless()->user();
+
+            // GitHub se data lo
+            $githubId   = $githubUser->getId();
+            $email      = $githubUser->getEmail();
+            $name       = $githubUser->getNickname() ?? $githubUser->getName();
+            $avatar     = $githubUser->getAvatar();
+
+            // Pehle github_id se dhundo, phir email se
+            $user = User::where('github_id', $githubId)->first();
+
+            if (!$user && $email) {
+                $user = User::where('email', $email)->first();
+            }
+
+            if (!$user) {
+                // Naya user insert karo same table mein
+                $user = User::create([
+                    'username'      => $name,
+                    // 'password_hash' => bcrypt(\Str::random(24)),  
+                    'role'          => 'GIT USER',               
+                    'is_active'     => 1,
+                    'github_id'     => $githubId,
+                    'email'         => $email,
+                    'avatar'        => $avatar,
+                ]);
+            } else {
+                // Existing user update karo
+                $user->update([
+                    'github_id' => $githubId,
+                    'avatar'    => $avatar,
+                ]);
+            }
+
+            $token = JWTAuth::claims([
+                'user_id'  => $user->id,
+                'username' => $user->username,
+                'role'     => $user->role,
+            ])->fromUser($user);
+
+            $query = http_build_query([
+                'token'    => $token,
+                'username' => $user->username,
+                'role'     => $user->role,
+                'user_id'  => $user->id,
+                'avatar'   => $user->avatar,
+            ]);
+
+            
+
+            return redirect('http://localhost:4200/auth/github/success?' . $query);
+
+        } catch (\Exception $e) {
+            return redirect('http://localhost:4200/login?error=github_failed');
+        }
+    }
     
 }
