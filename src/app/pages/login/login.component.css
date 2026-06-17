@@ -245,6 +245,26 @@
   background: var(--border);
 }
 
+/* ── Github button ── */
+.btn-github {
+  width: 100%;
+  font-family: var(--font);
+  font-size: 13.5px;
+  font-weight: 500;
+  padding: 10px 20px;
+  margin: 12px 0 0 0;
+  background: var(--white);
+  color: var(--navy);
+  border: 1.5px solid var(--border);
+  border-radius: var(--radius);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+  transition: background .15s, border-color .15s;
+  
+}
 /* ── Register button ── */
 .btn-register {
   width: 100%;

@@ -69,6 +69,11 @@ export class TransactionsComponent {
       });
   }
 
+  getCategoryName(categoryId: any): string {
+    const category = this.categories.find(c => c.id === categoryId);
+    return category ? category.category_name : '';
+  }
+
   saveTransaction() {
     if (
       !this.form.transaction_date ||

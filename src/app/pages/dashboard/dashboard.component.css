@@ -104,3 +104,50 @@
   .db-welcome { flex-direction: column; align-items: flex-start; gap: 10px; }
   .db-table { font-size: 12px; }
 }
+
+/* GitHub Avatar */
+.db-avatar-wrapper {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;  
+  margin-left: auto;
+  margin-right: 12px; 
+}
+
+.db-avatar-img {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  transition: border-color 0.2s ease;
+  transition: border-color 0.2s ease, transform 0.2s ease;
+  cursor: pointer;
+}
+
+.db-avatar-img:hover {
+  border-color: rgba(255, 255, 255, 0.8);
+}
+
+.db-avatar-initials {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: #185fa5;
+  color: #fff;
+  font-size: 20px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: default;
+  user-select: none;
+}
+
+/* Chart Container */
+.db-chart-wrap {
+  position: relative;
+  height: 280px;
+  width: 100%;
+  padding: 12px 0;
+}

@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { RouterLink, Router } from '@angular/router';
 import { ApiService } from '../../services/api.service';
+import { HttpClient } from '@angular/common/http';
 
 @Component({
   selector: 'app-login',
@@ -18,14 +19,29 @@ export class LoginComponent {
   errors: { username?: string; password?: string } = {};
   apiError = '';
   loading = false;
+  githubLoading = false;
   showPass = false;
 
-  constructor(private api: ApiService, private router: Router) {}
+  constructor(private http: HttpClient, private api: ApiService, private router: Router) {}
 
   clearError(field: 'username' | 'password') {
     this.errors[field] = '';
     this.apiError = '';
   }
+
+  loginWithGithub(): void {
+    this.githubLoading = true;
+    this.http.get<{ url: string }>('http://localhost:8000/api/auth/github/redirect')
+      .subscribe({
+        next: (res) => {
+          window.location.href = res.url;
+        },
+        error: () => {
+          this.githubLoading = false;
+        }
+      });
+  }
+
 
   login() {
     this.errors = {};

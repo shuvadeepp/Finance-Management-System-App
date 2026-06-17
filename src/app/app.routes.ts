@@ -12,4 +12,7 @@ export const routes: Routes = [
   { path: 'budgets',      canActivate: [authGuard], loadComponent: () => import('./pages/budgets/budgets.component').then(m => m.BudgetsComponent) },
   { path: 'forgot-password', canActivate: [noAuthGuard], loadComponent: () => import('./pages/forgot-password/forgot-password.component').then(m => m.ForgotPasswordComponent) },
   { path: 'reset-password',  canActivate: [noAuthGuard], loadComponent: () => import('./pages/reset-password/reset-password.component').then(m => m.ResetPasswordComponent) },
+
+  // ✅ GitHub OAuth Callback — no guard, lazy loaded
+  { path: 'auth/github/success', loadComponent: () => import('./github-callback/github-callback.component').then(m => m.GithubCallbackComponent) },
 ];

@@ -14,6 +14,7 @@ export class DashboardComponent implements OnInit {
 
   username = '';
   role = '';
+  avatar = '';
   loading = true;
   today = new Date();
 
@@ -32,6 +33,10 @@ export class DashboardComponent implements OnInit {
   ngOnInit() {
     this.username = localStorage.getItem('username') ?? '';
     this.role = localStorage.getItem('role') ?? '';
+    this.avatar   = localStorage.getItem('avatar')   ?? '';
+
+    console.log('Avatar from localStorage:', this.avatar);
+
     this.loadDashboard();
   }
 
@@ -82,7 +87,15 @@ export class DashboardComponent implements OnInit {
   }
 
   logout() {
+    const wasGithubUser = !!localStorage.getItem('user_id') && localStorage.getItem('role') === 'GIT USER';
     localStorage.clear();
+
+    if (wasGithubUser) {
+      // GitHub apna session browser mein alag rakhta hai — usse bhi clear karo
+      // taaki next "Login with GitHub" par account switch ho sake
+      window.open('https://github.com/logout', '_blank');
+    }
+
     location.href = '/';
   }
 }
