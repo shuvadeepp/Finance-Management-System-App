@@ -4,24 +4,22 @@ use Illuminate\Support\Facades\Route;
 
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\EmployeeController;
-use App\Http\Controllers\Api\ProjectController;
-use App\Http\Controllers\Api\AssignmentController;
+// use App\Http\Controllers\Api\ProjectController;
+// use App\Http\Controllers\Api\AssignmentController;
 use App\Http\Controllers\Api\CategoryController;
 use App\Http\Controllers\Api\TransactionController;
 use App\Http\Controllers\Api\BudgetController;
 use App\Http\Controllers\Api\DashboardController;
 
-// Route::post('/register', [AuthController::class, 'register']);
-Route::middleware('throttle:3,1')->group(function () {
-    
+Route::middleware('throttle:30,1')->group(function () {
     Route::post('/register', [AuthController::class, 'register']);
-
-});
-// Route::post('/login', [AuthController::class, 'login']);
-Route::middleware('throttle:5,1')->group(function () {
-
     Route::post('/login', [AuthController::class, 'login']);
+});
 
+
+Route::middleware(['jwt.role:ADMIN,MANAGER,EMPLOYEE,GIT USER', 'throttle:10,1'])->group(function () {
+    Route::post('/logout', [AuthController::class, 'logout']);
+    Route::post('/refresh-token', [AuthController::class, 'refreshToken']);
 });
 
 Route::post('/forgot-password', [AuthController::class,'forgotPassword']);
@@ -38,21 +36,21 @@ Route::middleware(['jwt.role:ADMIN,MANAGER'])->group(function () {
     Route::put('/employees/{id}', [EmployeeController::class, 'update']); 
     Route::delete('/employees/{id}', [EmployeeController::class, 'destroy']);
 
-    Route::get('/projects', [ProjectController::class, 'index']);
-    Route::post('/projects', [ProjectController::class, 'store']);
-    Route::put('/projects/{id}', [ProjectController::class, 'update']); 
-    Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
+    // Route::get('/projects', [ProjectController::class, 'index']);
+    // Route::post('/projects', [ProjectController::class, 'store']);
+    // Route::put('/projects/{id}', [ProjectController::class, 'update']); 
+    // Route::delete('/projects/{id}', [ProjectController::class, 'destroy']);
 });
 
-Route::middleware(['jwt.role:MANAGER'])->group(function () {
+// Route::middleware(['jwt.role:MANAGER'])->group(function () {
 
-    Route::post('/assign-project', [AssignmentController::class, 'assign']);
-});
+//     Route::post('/assign-project', [AssignmentController::class, 'assign']);
+// });
 
-Route::middleware(['jwt.role:ADMIN,MANAGER,EMPLOYEE,GIT USER'])->group(function () {
+// Route::middleware(['jwt.role:ADMIN,MANAGER,EMPLOYEE,GIT USER'])->group(function () {
 
-    Route::get('/assigned-projects', [AssignmentController::class, 'assignedProjects']);
-});
+//     Route::get('/assigned-projects', [AssignmentController::class, 'assignedProjects']);
+// });
 Route::middleware(['jwt.role:ADMIN,MANAGER,EMPLOYEE,GIT USER',
     'throttle:60,1'])->group(function () {
     Route::get('/categories', [CategoryController::class, 'index']);

@@ -18,5 +18,13 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        // 429 Too Many Requests — always return JSON
+        $exceptions->render(function (
+            \Illuminate\Http\Exceptions\ThrottleRequestsException $e,
+            \Illuminate\Http\Request $request
+        ) {
+            return response()->json([
+                'message' => 'Too Many Requests. Please try again later.',
+            ], 429);
+        });
     })->create();

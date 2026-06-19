@@ -3,18 +3,14 @@
 namespace App\Models;
 
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use PHPOpenSourceSaver\JWTAuth\Contracts\JWTSubject;
 
 class User extends Authenticatable implements JWTSubject
 {
-    protected $table = 'users';
+    use SoftDeletes;
 
-    /* protected $fillable = [
-        'username',
-        'password_hash',
-        'role',
-        'is_active',
-    ]; */
+    protected $table = 'users';
 
     protected $fillable = [
         'username',
@@ -30,13 +26,13 @@ class User extends Authenticatable implements JWTSubject
         'password_hash',
     ];
 
-    // Map Laravel's default 'password' field to your 'password_hash'
+    protected $dates = ['deleted_at'];
+
     public function getAuthPassword()
     {
         return $this->password_hash;
     }
 
-    // JWT required methods
     public function getJWTIdentifier()
     {
         return $this->getKey();
@@ -45,5 +41,25 @@ class User extends Authenticatable implements JWTSubject
     public function getJWTCustomClaims()
     {
         return [];
+    }
+
+    public function transactions()
+    {
+        return $this->hasMany(Transaction::class, 'created_by');
+    }
+
+    public function budgets()
+    {
+        return $this->hasMany(Budget::class, 'created_by');
+    }
+
+    public function categories()
+    {
+        return $this->hasMany(Category::class, 'created_by');
+    }
+
+    public function auditLogs()
+    {
+        return $this->hasMany(AuditLog::class, 'user_id');
     }
 }

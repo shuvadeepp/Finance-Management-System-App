@@ -25,7 +25,15 @@ class JwtRoleMiddleware
 
             $role = $payload->get('role');
 
-            if (!in_array($role, $roles)) {
+            // Flatten roles — handles "GIT USER" with space passed as single param
+            $allowedRoles = [];
+            foreach ($roles as $r) {
+                foreach (explode(',', $r) as $part) {
+                    $allowedRoles[] = trim($part);
+                }
+            }
+
+            if (!in_array($role, $allowedRoles)) {
                 return response()->json([
                     'message' => 'Forbidden Access'
                 ], 403);

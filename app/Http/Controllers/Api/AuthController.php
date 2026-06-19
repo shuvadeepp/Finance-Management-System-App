@@ -5,14 +5,16 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use App\Models\User;
+use App\Models\AuditLog;
 use Illuminate\Support\Facades\Hash;
 use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
+use PHPOpenSourceSaver\JWTAuth\Exceptions\TokenExpiredException;
+use PHPOpenSourceSaver\JWTAuth\Exceptions\TokenInvalidException;
 use App\Models\PasswordReset;
-use Illuminate\Support\Facades\Mail;
-use Illuminate\Support\Facades\Validator; 
+use Illuminate\Support\Facades\Validator;
 use Illuminate\Support\Facades\DB;
 use Carbon\Carbon;
-use Laravel\Socialite\Facades\Socialite;
+use Laravel\Socialite\Facades\Socialite; // @phpstan-ignore-line
 
 class AuthController extends Controller
 {
@@ -47,21 +49,29 @@ class AuthController extends Controller
         $user = User::where('username', $validated['username'])->first();
 
         if (!$user) {
-            return response()->json([
-                'message' => 'Invalid Username'
-            ], 401);
+            AuditLog::create([
+                'user_id'     => null,
+                'action'      => 'LOGIN_FAILED',
+                'description' => 'Failed login attempt for username: ' . $validated['username'],
+                'ip_address'  => $request->ip(),
+            ]);
+
+            return response()->json(['message' => 'Invalid Username'], 401);
         }
 
         if (!Hash::check($validated['password'], $user->password_hash)) {
-            return response()->json([
-                'message' => 'Invalid Password'
-            ], 401);
+            AuditLog::create([
+                'user_id'     => $user->id,
+                'action'      => 'LOGIN_FAILED',
+                'description' => 'Wrong password for username: ' . $validated['username'],
+                'ip_address'  => $request->ip(),
+            ]);
+
+            return response()->json(['message' => 'Invalid Password'], 401);
         }
 
         if (!$user->is_active) {
-            return response()->json([
-                'message' => 'Account is inactive'
-            ], 403);
+            return response()->json(['message' => 'Account is inactive'], 403);
         }
 
         $token = JWTAuth::claims([
@@ -70,102 +80,109 @@ class AuthController extends Controller
             'role'     => $user->role,
         ])->fromUser($user);
 
+        AuditLog::create([
+            'user_id'     => $user->id,
+            'action'      => 'LOGIN',
+            'description' => 'User logged in successfully',
+            'ip_address'  => $request->ip(),
+        ]);
+
         return response()->json([
             'token' => $token,
             'user'  => $user,
         ]);
     }
- 
- 
+
+    public function logout(Request $request)
+    {
+        try {
+            $user = JWTAuth::parseToken()->authenticate();
+
+            AuditLog::create([
+                'user_id'     => $user->id,
+                'action'      => 'LOGOUT',
+                'description' => 'User logged out',
+                'ip_address'  => $request->ip(),
+            ]);
+
+            JWTAuth::invalidate(JWTAuth::getToken());
+
+            return response()->json(['message' => 'Logged out successfully']);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Failed to logout'], 500);
+        }
+    }
+
+    public function refreshToken()
+    {
+        try {
+            $newToken = JWTAuth::parseToken()->refresh();
+
+            return response()->json(['token' => $newToken]);
+        } catch (TokenExpiredException $e) {
+            return response()->json(['message' => 'Token expired, please login again'], 401);
+        } catch (TokenInvalidException $e) {
+            return response()->json(['message' => 'Token invalid'], 401);
+        } catch (\Exception $e) {
+            return response()->json(['message' => 'Could not refresh token'], 500);
+        }
+    }
+
     public function resetPassword(Request $request)
     {
         $validator = Validator::make(
             $request->all(),
             [
                 'username' => 'required',
-                'otp' => 'required',
-                'password' => 'required|min:8'
-            ],
-            [
-                'username.required' => 'Username is required',
-                'otp.required' => 'OTP is required',
-                'password.required' => 'Password is required',
-                'password.min' => 'Password must be at least 8 characters'
+                'otp'      => 'required',
+                'password' => 'required|min:8',
             ]
         );
 
         if ($validator->fails()) {
             return response()->json([
                 'success' => false,
-                'errors' => $validator->errors(),
+                'errors'  => $validator->errors(),
             ], 422);
         }
 
         $reset = DB::table('password_resets')
-                    ->where('username', $request->username)
-                    ->first();
+            ->where('username', $request->username)
+            ->first();
 
         if (!$reset) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Reset request not found.',
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'Reset request not found.'], 404);
         }
 
-        // Check OTP
         if ($request->otp != $reset->otp) {
-            return response()->json([
-                'success' => false,
-                'message' => 'Invalid OTP.',
-            ], 400);
+            return response()->json(['success' => false, 'message' => 'Invalid OTP.'], 400);
         }
 
-        // Check Expiry
         if (Carbon::parse($reset->expires_at)->isPast()) {
-            return response()->json([
-                'success' => false,
-                'message' => 'OTP has expired.',
-            ], 400);
+            return response()->json(['success' => false, 'message' => 'OTP has expired.'], 400);
         }
 
-        // Find User
         $user = User::where('username', $request->username)->first();
 
         if (!$user) {
-            return response()->json([
-                'success' => false,
-                'message' => 'User not found.',
-            ], 404);
+            return response()->json(['success' => false, 'message' => 'User not found.'], 404);
         }
 
-        // Update Password
-        $user->update([
-            'password_hash' => Hash::make($request->password),
-        ]);
+        $user->update(['password_hash' => Hash::make($request->password)]);
 
-        // Delete Used OTP
-        DB::table('password_resets')
-            ->where('username', $request->username)
-            ->delete();
+        DB::table('password_resets')->where('username', $request->username)->delete();
 
-        return response()->json([
-            'success' => true,
-            'message' => 'Password reset successfully.',
-        ]);
+        return response()->json(['success' => true, 'message' => 'Password reset successfully.']);
     }
 
     public function forgotPassword(Request $request)
     {
-        $request->validate([
-            'username' => 'required'
-        ]);
+        $request->validate(['username' => 'required']);
 
         $user = User::where('username', $request->username)->first();
 
         if (!$user) {
-            return response()->json([
-                'message' => 'Username not found'
-            ], 404);
+            return response()->json(['message' => 'Username not found'], 404);
         }
 
         $otp = rand(1000, 9999);
@@ -173,82 +190,63 @@ class AuthController extends Controller
         PasswordReset::where('username', $request->username)->delete();
 
         PasswordReset::create([
-            'username' => $request->username,
-            'otp' => $otp,
-            'expires_at' => now()->addMinutes(12)
+            'username'   => $request->username,
+            'otp'        => $otp,
+            'expires_at' => now()->addMinutes(12),
         ]);
 
         return response()->json([
             'message' => 'OTP generated successfully',
-            'otp' => $otp 
+            'otp'     => $otp,
         ]);
     }
 
-    public function verifyOtp(Request $request) {
-
+    public function verifyOtp(Request $request)
+    {
         $request->validate([
             'username' => 'required',
-            'otp' => 'required'
+            'otp'      => 'required',
         ]);
 
-        $record = PasswordReset::where(
-            'username',
-            $request->username
-        )
-        ->where(
-            'otp',
-            $request->otp
-        )
-        ->first();
+        $record = PasswordReset::where('username', $request->username)
+            ->where('otp', $request->otp)
+            ->first();
 
         $secret_key = '%^&*(*&^%$%^&*&^%$%^&*(*&^%$%^&*' . $request->otp . '%^&*)*&^%$%^&*&^%$%^&*)*&^%$%^&*';
-        // dd($request->otp);
 
-        if(!$record)
-        {
-            return response()->json([
-                'message' => 'Invalid OTP'
-            ],422);
+        if (!$record) {
+            return response()->json(['message' => 'Invalid OTP'], 422);
         }
 
-        if(now()->gt($record->expires_at))
-        {
-            return response()->json([
-                'message' => 'OTP expired'
-            ],422);
+        if (now()->gt($record->expires_at)) {
+            return response()->json(['message' => 'OTP expired'], 422);
         }
 
         return response()->json([
-            'message' => 'OTP verified',
-            'secret_key' => $secret_key
+            'message'    => 'OTP verified',
+            'secret_key' => $secret_key,
         ]);
     }
 
-    public function githubRedirect() {
-        
-        // Stateless important hai kyunki yeh REST API hai
-        // 'prompt' => 'login' force karta hai GitHub ko dobara login screen dikhane ke liye,
-        // taaki already-logged-in session se same account auto-select na ho
+    public function githubRedirect()
+    {
         $url = Socialite::driver('github')->stateless()
             ->with(['prompt' => 'login'])
             ->redirect()->getTargetUrl();
-        
+
         return response()->json(['url' => $url]);
     }
 
-
-    public function githubCallback() {
-
+    public function githubCallback()
+    {
         try {
             $githubUser = Socialite::driver('github')->stateless()->user();
 
-            // GitHub se data lo
-            $githubId   = $githubUser->getId();
-            $email      = $githubUser->getEmail();
-            $name       = $githubUser->getNickname() ?? $githubUser->getName();
-            $avatar     = $githubUser->getAvatar();
+            $githubId = $githubUser->getId();
+            $email    = $githubUser->getEmail();
+            $name     = $githubUser->getNickname() ?? $githubUser->getName();
+            $avatar   = $githubUser->getAvatar();
 
-            // Pehle github_id se dhundo, phir email se
             $user = User::where('github_id', $githubId)->first();
 
             if (!$user && $email) {
@@ -256,18 +254,15 @@ class AuthController extends Controller
             }
 
             if (!$user) {
-                // Naya user insert karo same table mein
                 $user = User::create([
-                    'username'      => $name,
-                    // 'password_hash' => bcrypt(\Str::random(24)),  
-                    'role'          => 'GIT USER',               
-                    'is_active'     => 1,
-                    'github_id'     => $githubId,
-                    'email'         => $email,
-                    'avatar'        => $avatar,
+                    'username'  => $name,
+                    'role'      => 'GIT USER',
+                    'is_active' => 1,
+                    'github_id' => $githubId,
+                    'email'     => $email,
+                    'avatar'    => $avatar,
                 ]);
             } else {
-                // Existing user update karo
                 $user->update([
                     'github_id' => $githubId,
                     'avatar'    => $avatar,
@@ -280,6 +275,13 @@ class AuthController extends Controller
                 'role'     => $user->role,
             ])->fromUser($user);
 
+            AuditLog::create([
+                'user_id'     => $user->id,
+                'action'      => 'LOGIN',
+                'description' => 'User logged in via GitHub OAuth',
+                'ip_address'  => request()->ip(),
+            ]);
+
             $query = http_build_query([
                 'token'    => $token,
                 'username' => $user->username,
@@ -288,13 +290,9 @@ class AuthController extends Controller
                 'avatar'   => $user->avatar,
             ]);
 
-            
-
             return redirect('http://localhost:4200/auth/github/success?' . $query);
-
-        } catch (\Exception $e) {
+        } catch (\Exception) {
             return redirect('http://localhost:4200/login?error=github_failed');
         }
     }
-    
 }
