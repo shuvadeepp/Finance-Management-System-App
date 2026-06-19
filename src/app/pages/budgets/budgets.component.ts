@@ -97,8 +97,17 @@ export class BudgetsComponent implements OnInit {
     this.form = { id: '', category_id: '', budget_month: '', budget_year: '', budget_amount: '' };
   }
 
+  getStatusClass(status: string): string {
+    if (status === 'Safe') return 'bgt-status-safe';
+    if (status === 'Warning') return 'bgt-status-warning';
+    if (status === 'Exceeded') return 'bgt-status-exceeded';
+    return '';
+  }
+
   logout() {
-    localStorage.clear();
-    location.href = '/';
+    this.api.logout().subscribe({
+      next: () => { localStorage.clear(); location.href = '/'; },
+      error: () => { localStorage.clear(); location.href = '/'; }
+    });
   }
 }

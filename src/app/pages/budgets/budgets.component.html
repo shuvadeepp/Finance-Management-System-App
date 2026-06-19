@@ -31,7 +31,7 @@
         </div>
         <div class="ov-info">
           <span class="ov-label">Total Budget</span>
-          <span class="ov-value">₹ {{ overview.total_budget || 0 | number:'1.0-0' }}</span>
+          <span class="ov-value">₹ {{ overview.budget || 0 | number:'1.0-0' }}</span>
         </div>
       </div>
 
@@ -41,7 +41,7 @@
         </div>
         <div class="ov-info">
           <span class="ov-label">Total Expense</span>
-          <span class="ov-value">₹ {{ overview.total_expense || 0 | number:'1.0-0' }}</span>
+          <span class="ov-value">₹ {{ overview.spent || 0 | number:'1.0-0' }}</span>
         </div>
       </div>
 
@@ -220,6 +220,7 @@
             <th>BUDGET</th>
             <th>SPENT</th>
             <th>PROGRESS</th>
+            <th>STATUS</th>
             <th>REMAINING</th>
           </tr>
         </thead>
@@ -242,6 +243,9 @@
                   {{ getPercent(t.spent_amount, t.budget_amount) }}%
                 </span>
               </div>
+            </td>
+            <td>
+              <span class="bgt-status-badge" [ngClass]="getStatusClass(t.status)">{{ t.status || '—' }}</span>
             </td>
             <td>
               <span class="remaining-badge"

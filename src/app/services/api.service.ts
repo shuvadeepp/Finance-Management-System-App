@@ -1,4 +1,4 @@
-import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { HttpClient, HttpHeaders, HttpParams } from '@angular/common/http';
 import { Injectable } from '@angular/core';
 
 @Injectable({
@@ -18,208 +18,130 @@ export class ApiService {
     };
   }
 
-  login(data:any) {
+  // ── Auth ────────────────────────────────────────────────────────────────
+
+  login(data: any) {
     return this.http.post(this.api + '/login', data);
   }
+
+  logout() {
+    return this.http.post(this.api + '/logout', {}, this.getHeaders());
+  }
+
+  refreshToken() {
+    return this.http.post(this.api + '/refresh-token', {}, this.getHeaders());
+  }
+
+  forgotPassword(data: any) {
+    return this.http.post(this.api + '/forgot-password', data);
+  }
+
+  verifyOtp(data: any) {
+    return this.http.post(this.api + '/verify-otp', data);
+  }
+
+  resetPassword(data: any) {
+    return this.http.post(this.api + '/reset-password', data);
+  }
+
+  // ── Employees ───────────────────────────────────────────────────────────
 
   getEmployees() {
     return this.http.get(this.api + '/employees', this.getHeaders());
   }
 
-  createEmployee(data:any) { 
-    return this.http.post(
-      this.api + '/employees',
-      data,
-      this.getHeaders()
-    );
+  createEmployee(data: any) {
+    return this.http.post(this.api + '/employees', data, this.getHeaders());
   }
 
-  updateEmployee(id:any, data:any) { 
-    return this.http.put(
-      this.api + '/employees/' + id,
-      data,
-      this.getHeaders()
-    );
+  updateEmployee(id: any, data: any) {
+    return this.http.put(this.api + '/employees/' + id, data, this.getHeaders());
   }
 
-  deleteEmployee(id:any) { 
-    return this.http.delete(
-      this.api + '/employees/' + id,
-      this.getHeaders()
-    );
+  deleteEmployee(id: any) {
+    return this.http.delete(this.api + '/employees/' + id, this.getHeaders());
   }
 
-  getProjects() {
-    return this.http.get(this.api + '/projects', this.getHeaders());
-  }
+  // ── Categories ──────────────────────────────────────────────────────────
 
-  assignProject(data:any) {
-    return this.http.post(this.api + '/assign-project', data, this.getHeaders());
-  }
-
-  getAssignedProjects() {
-    return this.http.get(this.api + '/assigned-projects', this.getHeaders());
-  }
-
-  createProject(data:any) {
-
-    return this.http.post(
-      this.api + '/projects',
-      data,
-      this.getHeaders()
-    );
-  }
-
-  updateProject(id:any, data:any) {
-
-    return this.http.put(
-      this.api + '/projects/' + id,
-      data,
-      this.getHeaders()
-    );
-  }
-
-  deleteProject(id:any) {
-
-    return this.http.delete(
-      this.api + '/projects/' + id,
-      this.getHeaders()
-    );
-  }
-
-
-  // category api function
   getCategories() {
-    return this.http.get(
-      this.api + '/categories',
-      this.getHeaders()
-    );
+    return this.http.get(this.api + '/categories', this.getHeaders());
   }
 
-  createCategory(data:any) {
-    return this.http.post(
-      this.api + '/categories',
-      data,
-      this.getHeaders()
-    );
+  createCategory(data: any) {
+    return this.http.post(this.api + '/categories', data, this.getHeaders());
   }
 
-  updateCategory(id:any, data:any) {
-    return this.http.put(
-      this.api + '/categories/' + id,
-      data,
-      this.getHeaders()
-    );
+  updateCategory(id: any, data: any) {
+    return this.http.put(this.api + '/categories/' + id, data, this.getHeaders());
   }
 
-  deleteCategory(id:any) {
-    return this.http.delete(
-      this.api + '/categories/' + id,
-      this.getHeaders()
-    );
+  deleteCategory(id: any) {
+    return this.http.delete(this.api + '/categories/' + id, this.getHeaders());
   }
 
-  // transaction
-  getTransactions() {
-    return this.http.get(
-      this.api + '/transactions',
-      this.getHeaders()
-    );
+  // ── Transactions ────────────────────────────────────────────────────────
+
+  getTransactions(filters?: {
+    date_from?: string;
+    date_to?: string;
+    category_id?: string;
+    transaction_type?: string;
+  }) {
+    let params = new HttpParams();
+    if (filters) {
+      if (filters.date_from)        params = params.set('date_from', filters.date_from);
+      if (filters.date_to)          params = params.set('date_to', filters.date_to);
+      if (filters.category_id)      params = params.set('category_id', filters.category_id);
+      if (filters.transaction_type) params = params.set('transaction_type', filters.transaction_type);
+    }
+    return this.http.get(this.api + '/transactions', {
+      headers: new HttpHeaders({ Authorization: 'Bearer ' + localStorage.getItem('token') }),
+      params
+    });
   }
 
-  createTransaction(data:any) {
-    return this.http.post(
-      this.api + '/transactions',
-      data,
-      this.getHeaders()
-    );
+  createTransaction(data: any) {
+    return this.http.post(this.api + '/transactions', data, this.getHeaders());
   }
 
-  updateTransaction(id:any,data:any) {
-    return this.http.put(
-      this.api + '/transactions/' + id,
-      data,
-      this.getHeaders()
-    );
+  updateTransaction(id: any, data: any) {
+    return this.http.put(this.api + '/transactions/' + id, data, this.getHeaders());
   }
 
-  deleteTransaction(id:any) {
-    return this.http.delete(
-      this.api + '/transactions/' + id,
-      this.getHeaders()
-    );
+  deleteTransaction(id: any) {
+    return this.http.delete(this.api + '/transactions/' + id, this.getHeaders());
   }
 
-  // budgets
+  // ── Budgets ─────────────────────────────────────────────────────────────
+
   getBudgets() {
-    return this.http.get(
-      this.api + '/budgets',
-      this.getHeaders()
-    );
+    return this.http.get(this.api + '/budgets', this.getHeaders());
   }
 
-  createBudget(data:any) {
-    return this.http.post(
-      this.api + '/budgets',
-      data,
-      this.getHeaders()
-    );
+  createBudget(data: any) {
+    return this.http.post(this.api + '/budgets', data, this.getHeaders());
   }
 
-  updateBudget(id:any,data:any) {
-    return this.http.put(
-      this.api + '/budgets/' + id,
-      data,
-      this.getHeaders()
-    );
+  updateBudget(id: any, data: any) {
+    return this.http.put(this.api + '/budgets/' + id, data, this.getHeaders());
   }
 
-  deleteBudget(id:any) {
-    return this.http.delete(
-      this.api + '/budgets/' + id,
-      this.getHeaders()
-    );
+  deleteBudget(id: any) {
+    return this.http.delete(this.api + '/budgets/' + id, this.getHeaders());
   }
 
   getBudgetTracking() {
-    return this.http.get(
-      this.api + '/budget-tracking',
-      this.getHeaders()
-    );
+    return this.http.get(this.api + '/budget-tracking', this.getHeaders());
   }
 
   getBudgetOverview() {
-    return this.http.get(
-      this.api + '/budget-overview',
-      this.getHeaders()
-    );
+    return this.http.get(this.api + '/budget-overview', this.getHeaders());
   }
+
+  // ── Dashboard ───────────────────────────────────────────────────────────
 
   getDashboard() {
     return this.http.get(this.api + '/dashboard', this.getHeaders());
-  }
-
-  forgotPassword(data:any)
-  {
-    return this.http.post(
-      this.api + '/forgot-password',
-      data
-    );
-  }
-
-  verifyOtp(data:any)
-  {
-    return this.http.post(
-      this.api + '/verify-otp',
-      data
-    );
-  }
-
-  resetPassword(data:any)
-  {
-    return this.http.post(
-      this.api + '/reset-password',
-      data
-    );
   }
 }

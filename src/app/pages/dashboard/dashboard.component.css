@@ -22,7 +22,7 @@
 .db-section-title { font-size: 12px; font-weight: 700; text-transform: uppercase; letter-spacing: .06em; color: #94a3b8; margin: 28px 0 14px; }
 
 /* Financial cards */
-.db-fin-row { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-bottom: 20px; }
+.db-fin-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 20px; }
 .db-fin-card { display: flex; align-items: center; gap: 14px; background: #fff; border: 1px solid #e2e8f0; border-radius: 12px; padding: 18px 20px; box-shadow: 0 1px 3px rgba(0,0,0,.04); }
 .db-fin-icon { width: 40px; height: 40px; border-radius: 10px; display: flex; align-items: center; justify-content: center; flex-shrink: 0; }
 .db-fin-income .db-fin-icon { background: #dcfce7; color: #16a34a; }
@@ -35,6 +35,14 @@
 .db-fin-expense .db-fin-value { color: #dc2626; }
 .db-fin-positive .db-fin-value { color: #2563eb; }
 .db-fin-negative .db-fin-value { color: #dc2626; }
+.db-fin-savings .db-fin-icon { background: #f3e8ff; color: #7c3aed; }
+.db-fin-savings .db-fin-value { color: #7c3aed; }
+
+/* Budget status badges */
+.db-budget-status { font-size: 10px; font-weight: 700; padding: 2px 8px; border-radius: 20px; margin-left: 6px; }
+.status-safe     { background: #dcfce7; color: #16a34a; }
+.status-warning  { background: #fef9c3; color: #b45309; }
+.status-exceeded { background: #fee2e2; color: #dc2626; }
 
 /* Middle row */
 .db-mid-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 16px; }

@@ -63,13 +63,22 @@
             <span class="db-fin-value">{{ totalExpense | currency:'INR':'symbol':'1.2-2' }}</span>
           </div>
         </div>
-        <div class="db-fin-card" [class.db-fin-positive]="netBalance >= 0" [class.db-fin-negative]="netBalance < 0">
+        <div class="db-fin-card" [class.db-fin-positive]="netSavings >= 0" [class.db-fin-negative]="netSavings < 0">
           <div class="db-fin-icon">
             <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
           </div>
           <div class="db-fin-body">
-            <span class="db-fin-label">Net Balance</span>
-            <span class="db-fin-value">{{ netBalance | currency:'INR':'symbol':'1.2-2' }}</span>
+            <span class="db-fin-label">Net Savings</span>
+            <span class="db-fin-value">{{ netSavings | currency:'INR':'symbol':'1.2-2' }}</span>
+          </div>
+        </div>
+        <div class="db-fin-card db-fin-savings">
+          <div class="db-fin-icon">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>
+          </div>
+          <div class="db-fin-body">
+            <span class="db-fin-label">Savings %</span>
+            <span class="db-fin-value">{{ savingsPercentage | number:'1.1-1' }}%</span>
           </div>
         </div>
       </div>
@@ -116,7 +125,13 @@
           <div class="db-budget-list">
             <div class="db-budget-item" *ngFor="let b of budgetTracking">
               <div class="db-budget-top">
-                <span class="db-budget-name">{{ b.category_name ?? b.name ?? 'Budget' }}</span>
+                <span class="db-budget-name">{{ b.category_name ?? 'Budget' }}</span>
+                <span class="db-budget-status"
+                  [class.status-safe]="b.status === 'Safe'"
+                  [class.status-warning]="b.status === 'Warning'"
+                  [class.status-exceeded]="b.status === 'Exceeded'">
+                  {{ b.status }}
+                </span>
                 <span class="db-budget-pct" [style.color]="getBudgetColor(getBudgetPercent(b))">{{ getBudgetPercent(b) }}%</span>
               </div>
               <div class="db-budget-bar-bg">
@@ -126,13 +141,37 @@
                 </div>
               </div>
               <div class="db-budget-meta">
-                <span>Spent: {{ (b.spent || b.total_spent || 0) | currency:'INR':'symbol':'1.0-0' }}</span>
-                <span>Budget: {{ (b.budget_amount || b.amount || 0) | currency:'INR':'symbol':'1.0-0' }}</span>
+                <span>Spent: {{ (b.spent || 0) | currency:'INR':'symbol':'1.0-0' }}</span>
+                <span>Budget: {{ (b.budget_amount || 0) | currency:'INR':'symbol':'1.0-0' }}</span>
               </div>
             </div>
           </div>
         </div>
 
+      </div>
+
+      <!-- Top Spending Categories -->
+      <div class="db-card db-card--full" *ngIf="topSpendingCategories.length > 0">
+        <div class="db-card-header">
+          <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/><polyline points="17 6 23 6 23 12"/></svg>
+          Top Spending Categories
+        </div>
+        <table class="db-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Category</th>
+              <th class="db-th-right">Total Spent</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let c of topSpendingCategories; let i = index">
+              <td class="db-td-muted">{{ i + 1 }}</td>
+              <td>{{ c.category_name }}</td>
+              <td class="db-td-right db-amount--expense">{{ c.total_spent | currency:'INR':'symbol':'1.2-2' }}</td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <!-- Recent Transactions -->
