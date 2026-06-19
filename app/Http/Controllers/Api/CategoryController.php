@@ -15,6 +15,22 @@ class CategoryController extends Controller
     private const CACHE_KEY = 'categories_all';
     private const CACHE_TTL = 3600;
 
+    /**
+     * @OA\Get(
+     *     path="/categories",
+     *     tags={"Categories"},
+     *     summary="List all categories",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Categories list",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="source", type="string", example="database"),
+     *             @OA\Property(property="data", type="array", @OA\Items(type="object"))
+     *         )
+     *     )
+     * )
+     */
     public function index()
     {
         $cachedData = Redis::get(self::CACHE_KEY);
@@ -39,6 +55,24 @@ class CategoryController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/categories",
+     *     tags={"Categories"},
+     *     summary="Create a new category",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"category_name","category_type"},
+     *             @OA\Property(property="category_name", type="string", example="Groceries"),
+     *             @OA\Property(property="category_type", type="string", enum={"INCOME","EXPENSE"})
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Category Created Successfully"),
+     *     @OA\Response(response=422, description="Validation error or category already exists")
+     * )
+     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -79,6 +113,17 @@ class CategoryController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/categories/{id}",
+     *     tags={"Categories"},
+     *     summary="Get a category by ID",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Category details"),
+     *     @OA\Response(response=404, description="Category Not Found")
+     * )
+     */
     public function show(int $id)
     {
         $category = Category::whereNull('deleted_at')->find($id);
@@ -90,6 +135,26 @@ class CategoryController extends Controller
         return response()->json($category);
     }
 
+    /**
+     * @OA\Put(
+     *     path="/categories/{id}",
+     *     tags={"Categories"},
+     *     summary="Update a category",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"category_name","category_type"},
+     *             @OA\Property(property="category_name", type="string", example="Groceries"),
+     *             @OA\Property(property="category_type", type="string", enum={"INCOME","EXPENSE"})
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Category Updated Successfully"),
+     *     @OA\Response(response=404, description="Category Not Found"),
+     *     @OA\Response(response=422, description="Validation error or duplicate")
+     * )
+     */
     public function update(Request $request, int $id)
     {
         $category = Category::whereNull('deleted_at')->find($id);
@@ -130,6 +195,18 @@ class CategoryController extends Controller
         return response()->json(['message' => 'Category Updated Successfully']);
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/categories/{id}",
+     *     tags={"Categories"},
+     *     summary="Delete a category",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Category Deleted Successfully"),
+     *     @OA\Response(response=404, description="Category Not Found"),
+     *     @OA\Response(response=422, description="Cannot delete default category")
+     * )
+     */
     public function destroy(int $id)
     {
         $category = Category::whereNull('deleted_at')->find($id);
@@ -149,6 +226,15 @@ class CategoryController extends Controller
         return response()->json(['message' => 'Category Deleted Successfully']);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/categories/default",
+     *     tags={"Categories"},
+     *     summary="List default categories",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Default categories list")
+     * )
+     */
     public function defaultCategories()
     {
         return Category::where('is_default', 1)

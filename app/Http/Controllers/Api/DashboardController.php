@@ -10,6 +10,37 @@ use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class DashboardController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/dashboard",
+     *     tags={"Dashboard"},
+     *     summary="Get full dashboard data for the authenticated user",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Dashboard data",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="source", type="string", example="database"),
+     *             @OA\Property(
+     *                 property="data",
+     *                 type="object",
+     *                 @OA\Property(property="financial_overview", type="object",
+     *                     @OA\Property(property="total_income", type="number"),
+     *                     @OA\Property(property="total_expense", type="number"),
+     *                     @OA\Property(property="net_savings", type="number"),
+     *                     @OA\Property(property="savings_percentage", type="number")
+     *                 ),
+     *                 @OA\Property(property="top_spending_categories", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="spending_breakdown", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="monthly_chart", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="budget_progress", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="budget_utilization", type="array", @OA\Items(type="object")),
+     *                 @OA\Property(property="recent_transactions", type="array", @OA\Items(type="object"))
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function index()
     {
         $user  = JWTAuth::parseToken()->authenticate();

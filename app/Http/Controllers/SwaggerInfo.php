@@ -1,7 +1,5 @@
 <?php
 
-namespace App\Http\Controllers;
-
 /**
  * @OA\Info(
  *     title="CaseStudy API",
@@ -21,7 +19,3 @@ namespace App\Http\Controllers;
  *     bearerFormat="JWT"
  * )
  */
-abstract class Controller
-{
-    //
-}

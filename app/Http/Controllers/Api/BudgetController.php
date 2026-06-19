@@ -11,6 +11,15 @@ use Illuminate\Support\Facades\DB;
 
 class BudgetController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/budgets",
+     *     tags={"Budgets"},
+     *     summary="List all budgets for the authenticated user",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="List of budgets with category names")
+     * )
+     */
     public function index()
     {
         $user = JWTAuth::parseToken()->authenticate();
@@ -23,6 +32,26 @@ class BudgetController extends Controller
             ->get();
     }
 
+    /**
+     * @OA\Post(
+     *     path="/budgets",
+     *     tags={"Budgets"},
+     *     summary="Create a new budget",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"category_id","budget_month","budget_year","budget_amount"},
+     *             @OA\Property(property="category_id", type="integer", example=3),
+     *             @OA\Property(property="budget_month", type="integer", minimum=1, maximum=12, example=6),
+     *             @OA\Property(property="budget_year", type="integer", minimum=2000, example=2024),
+     *             @OA\Property(property="budget_amount", type="number", format="float", example=5000.00)
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Budget Saved Successfully"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
     public function store(Request $request)
     {
         $request->validate([
@@ -52,6 +81,28 @@ class BudgetController extends Controller
         return response()->json(['message' => 'Budget Saved Successfully']);
     }
 
+    /**
+     * @OA\Put(
+     *     path="/budgets/{id}",
+     *     tags={"Budgets"},
+     *     summary="Update a budget",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"category_id","budget_month","budget_year","budget_amount"},
+     *             @OA\Property(property="category_id", type="integer", example=3),
+     *             @OA\Property(property="budget_month", type="integer", minimum=1, maximum=12, example=6),
+     *             @OA\Property(property="budget_year", type="integer", minimum=2000, example=2024),
+     *             @OA\Property(property="budget_amount", type="number", format="float", example=6000.00)
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Budget Updated Successfully"),
+     *     @OA\Response(response=404, description="Budget Not Found"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
     public function update(Request $request, int $id)
     {
         $budget = Budget::find($id);
@@ -86,6 +137,17 @@ class BudgetController extends Controller
         return response()->json(['message' => 'Budget Updated Successfully']);
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/budgets/{id}",
+     *     tags={"Budgets"},
+     *     summary="Delete a budget",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Budget Deleted Successfully"),
+     *     @OA\Response(response=404, description="Budget Not Found")
+     * )
+     */
     public function destroy(int $id)
     {
         $budget = Budget::find($id);
@@ -99,6 +161,28 @@ class BudgetController extends Controller
         return response()->json(['message' => 'Budget Deleted Successfully']);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/budget-tracking",
+     *     tags={"Budgets"},
+     *     summary="Get budget tracking with spending vs budget per category",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Budget tracking data",
+     *         @OA\JsonContent(
+     *             type="array",
+     *             @OA\Items(
+     *                 @OA\Property(property="category_name", type="string"),
+     *                 @OA\Property(property="budget_amount", type="number"),
+     *                 @OA\Property(property="spent_amount", type="number"),
+     *                 @OA\Property(property="percentage", type="number"),
+     *                 @OA\Property(property="status", type="string", enum={"Safe","Warning","Exceeded"})
+     *             )
+     *         )
+     *     )
+     * )
+     */
     public function budgetTracking()
     {
         $user = JWTAuth::parseToken()->authenticate();
@@ -136,6 +220,24 @@ class BudgetController extends Controller
         return response()->json($rows);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/budget-overview",
+     *     tags={"Budgets"},
+     *     summary="Get overall budget overview for the authenticated user",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="Budget overview",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="budget", type="number"),
+     *             @OA\Property(property="spent", type="number"),
+     *             @OA\Property(property="remaining", type="number"),
+     *             @OA\Property(property="status", type="string", enum={"Safe","Warning","Exceeded"})
+     *         )
+     *     )
+     * )
+     */
     public function overview()
     {
         $user = JWTAuth::parseToken()->authenticate();

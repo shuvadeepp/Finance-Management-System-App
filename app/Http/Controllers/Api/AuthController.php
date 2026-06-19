@@ -18,6 +18,24 @@ use Laravel\Socialite\Facades\Socialite; // @phpstan-ignore-line
 
 class AuthController extends Controller
 {
+    /**
+     * @OA\Post(
+     *     path="/register",
+     *     tags={"Auth"},
+     *     summary="Register a new user",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"username","password","role"},
+     *             @OA\Property(property="username", type="string", example="john_doe"),
+     *             @OA\Property(property="password", type="string", example="secret123"),
+     *             @OA\Property(property="role", type="string", enum={"ADMIN","MANAGER","EMPLOYEE"})
+     *         )
+     *     ),
+     *     @OA\Response(response=201, description="User Registered"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
     public function register(Request $request)
     {
         $validated = $request->validate([
@@ -39,6 +57,31 @@ class AuthController extends Controller
         ], 201);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/login",
+     *     tags={"Auth"},
+     *     summary="Login and receive a JWT token",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"username","password"},
+     *             @OA\Property(property="username", type="string", example="john_doe"),
+     *             @OA\Property(property="password", type="string", example="secret123")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="Login successful",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="token", type="string"),
+     *             @OA\Property(property="user", type="object")
+     *         )
+     *     ),
+     *     @OA\Response(response=401, description="Invalid credentials"),
+     *     @OA\Response(response=403, description="Account inactive")
+     * )
+     */
     public function login(Request $request)
     {
         $validated = $request->validate([
@@ -93,6 +136,16 @@ class AuthController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/logout",
+     *     tags={"Auth"},
+     *     summary="Logout and invalidate JWT token",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(response=200, description="Logged out successfully"),
+     *     @OA\Response(response=500, description="Failed to logout")
+     * )
+     */
     public function logout(Request $request)
     {
         try {
@@ -113,6 +166,20 @@ class AuthController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *     path="/refresh-token",
+     *     tags={"Auth"},
+     *     summary="Refresh JWT token",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Response(
+     *         response=200,
+     *         description="New token",
+     *         @OA\JsonContent(@OA\Property(property="token", type="string"))
+     *     ),
+     *     @OA\Response(response=401, description="Token expired or invalid")
+     * )
+     */
     public function refreshToken()
     {
         try {
@@ -128,6 +195,126 @@ class AuthController extends Controller
         }
     }
 
+    /**
+     * @OA\Post(
+     *     path="/forgot-password",
+     *     tags={"Auth"},
+     *     summary="Request a password reset OTP",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"username"},
+     *             @OA\Property(property="username", type="string", example="john_doe")
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="OTP generated",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="otp", type="integer", example=1234)
+     *         )
+     *     ),
+     *     @OA\Response(response=404, description="Username not found")
+     * )
+     */
+    public function forgotPassword(Request $request)
+    {
+        $request->validate(['username' => 'required']);
+
+        $user = User::where('username', $request->username)->first();
+
+        if (!$user) {
+            return response()->json(['message' => 'Username not found'], 404);
+        }
+
+        $otp = rand(1000, 9999);
+
+        PasswordReset::where('username', $request->username)->delete();
+
+        PasswordReset::create([
+            'username'   => $request->username,
+            'otp'        => $otp,
+            'expires_at' => now()->addMinutes(12),
+        ]);
+
+        return response()->json([
+            'message' => 'OTP generated successfully',
+            'otp'     => $otp,
+        ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/verify-otp",
+     *     tags={"Auth"},
+     *     summary="Verify OTP for password reset",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"username","otp"},
+     *             @OA\Property(property="username", type="string", example="john_doe"),
+     *             @OA\Property(property="otp", type="integer", example=1234)
+     *         )
+     *     ),
+     *     @OA\Response(
+     *         response=200,
+     *         description="OTP verified",
+     *         @OA\JsonContent(
+     *             @OA\Property(property="message", type="string"),
+     *             @OA\Property(property="secret_key", type="string")
+     *         )
+     *     ),
+     *     @OA\Response(response=422, description="Invalid or expired OTP")
+     * )
+     */
+    public function verifyOtp(Request $request)
+    {
+        $request->validate([
+            'username' => 'required',
+            'otp'      => 'required',
+        ]);
+
+        $record = PasswordReset::where('username', $request->username)
+            ->where('otp', $request->otp)
+            ->first();
+
+        $secret_key = '%^&*(*&^%$%^&*&^%$%^&*(*&^%$%^&*' . $request->otp . '%^&*)*&^%$%^&*&^%$%^&*)*&^%$%^&*';
+
+        if (!$record) {
+            return response()->json(['message' => 'Invalid OTP'], 422);
+        }
+
+        if (now()->gt($record->expires_at)) {
+            return response()->json(['message' => 'OTP expired'], 422);
+        }
+
+        return response()->json([
+            'message'    => 'OTP verified',
+            'secret_key' => $secret_key,
+        ]);
+    }
+
+    /**
+     * @OA\Post(
+     *     path="/reset-password",
+     *     tags={"Auth"},
+     *     summary="Reset password using OTP",
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"username","otp","password"},
+     *             @OA\Property(property="username", type="string", example="john_doe"),
+     *             @OA\Property(property="otp", type="integer", example=1234),
+     *             @OA\Property(property="password", type="string", minLength=8, example="newpassword")
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Password reset successfully"),
+     *     @OA\Response(response=400, description="Invalid or expired OTP"),
+     *     @OA\Response(response=404, description="Reset request or user not found"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
     public function resetPassword(Request $request)
     {
         $validator = Validator::make(
@@ -175,59 +362,18 @@ class AuthController extends Controller
         return response()->json(['success' => true, 'message' => 'Password reset successfully.']);
     }
 
-    public function forgotPassword(Request $request)
-    {
-        $request->validate(['username' => 'required']);
-
-        $user = User::where('username', $request->username)->first();
-
-        if (!$user) {
-            return response()->json(['message' => 'Username not found'], 404);
-        }
-
-        $otp = rand(1000, 9999);
-
-        PasswordReset::where('username', $request->username)->delete();
-
-        PasswordReset::create([
-            'username'   => $request->username,
-            'otp'        => $otp,
-            'expires_at' => now()->addMinutes(12),
-        ]);
-
-        return response()->json([
-            'message' => 'OTP generated successfully',
-            'otp'     => $otp,
-        ]);
-    }
-
-    public function verifyOtp(Request $request)
-    {
-        $request->validate([
-            'username' => 'required',
-            'otp'      => 'required',
-        ]);
-
-        $record = PasswordReset::where('username', $request->username)
-            ->where('otp', $request->otp)
-            ->first();
-
-        $secret_key = '%^&*(*&^%$%^&*&^%$%^&*(*&^%$%^&*' . $request->otp . '%^&*)*&^%$%^&*&^%$%^&*)*&^%$%^&*';
-
-        if (!$record) {
-            return response()->json(['message' => 'Invalid OTP'], 422);
-        }
-
-        if (now()->gt($record->expires_at)) {
-            return response()->json(['message' => 'OTP expired'], 422);
-        }
-
-        return response()->json([
-            'message'    => 'OTP verified',
-            'secret_key' => $secret_key,
-        ]);
-    }
-
+    /**
+     * @OA\Get(
+     *     path="/auth/github/redirect",
+     *     tags={"Auth"},
+     *     summary="Get GitHub OAuth redirect URL",
+     *     @OA\Response(
+     *         response=200,
+     *         description="GitHub redirect URL",
+     *         @OA\JsonContent(@OA\Property(property="url", type="string"))
+     *     )
+     * )
+     */
     public function githubRedirect()
     {
         $url = Socialite::driver('github')->stateless()
@@ -237,6 +383,14 @@ class AuthController extends Controller
         return response()->json(['url' => $url]);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/auth/github/callback",
+     *     tags={"Auth"},
+     *     summary="GitHub OAuth callback (handled by GitHub, not called directly)",
+     *     @OA\Response(response=302, description="Redirect to frontend with token")
+     * )
+     */
     public function githubCallback()
     {
         try {

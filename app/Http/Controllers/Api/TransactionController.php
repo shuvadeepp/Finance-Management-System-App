@@ -11,6 +11,19 @@ use PHPOpenSourceSaver\JWTAuth\Facades\JWTAuth;
 
 class TransactionController extends Controller
 {
+    /**
+     * @OA\Get(
+     *     path="/transactions",
+     *     tags={"Transactions"},
+     *     summary="List transactions for the authenticated user",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="date_from", in="query", required=false, @OA\Schema(type="string", format="date", example="2024-01-01")),
+     *     @OA\Parameter(name="date_to", in="query", required=false, @OA\Schema(type="string", format="date", example="2024-12-31")),
+     *     @OA\Parameter(name="category_id", in="query", required=false, @OA\Schema(type="integer")),
+     *     @OA\Parameter(name="transaction_type", in="query", required=false, @OA\Schema(type="string", enum={"INCOME","EXPENSE"})),
+     *     @OA\Response(response=200, description="List of transactions")
+     * )
+     */
     public function index(Request $request)
     {
         $user = JWTAuth::parseToken()->authenticate();
@@ -42,6 +55,28 @@ class TransactionController extends Controller
         return response()->json($transactions);
     }
 
+    /**
+     * @OA\Post(
+     *     path="/transactions",
+     *     tags={"Transactions"},
+     *     summary="Create a new transaction",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"transaction_date","amount","transaction_type","category_id"},
+     *             @OA\Property(property="transaction_date", type="string", format="date", example="2024-06-01"),
+     *             @OA\Property(property="amount", type="number", format="float", example=500.00),
+     *             @OA\Property(property="transaction_type", type="string", enum={"INCOME","EXPENSE"}),
+     *             @OA\Property(property="category_id", type="integer", example=2),
+     *             @OA\Property(property="description", type="string", example="Monthly salary"),
+     *             @OA\Property(property="payment_mode", type="string", enum={"CASH","CARD","UPI","NET_BANKING","OTHER"})
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Transaction Created Successfully"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
     public function store(Request $request)
     {
         $validator = Validator::make($request->all(), [
@@ -81,6 +116,30 @@ class TransactionController extends Controller
         ]);
     }
 
+    /**
+     * @OA\Put(
+     *     path="/transactions/{id}",
+     *     tags={"Transactions"},
+     *     summary="Update a transaction",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\RequestBody(
+     *         required=true,
+     *         @OA\JsonContent(
+     *             required={"transaction_date","amount","transaction_type","category_id"},
+     *             @OA\Property(property="transaction_date", type="string", format="date", example="2024-06-01"),
+     *             @OA\Property(property="amount", type="number", format="float", example=500.00),
+     *             @OA\Property(property="transaction_type", type="string", enum={"INCOME","EXPENSE"}),
+     *             @OA\Property(property="category_id", type="integer", example=2),
+     *             @OA\Property(property="description", type="string", example="Updated description"),
+     *             @OA\Property(property="payment_mode", type="string", enum={"CASH","CARD","UPI","NET_BANKING","OTHER"})
+     *         )
+     *     ),
+     *     @OA\Response(response=200, description="Transaction Updated Successfully"),
+     *     @OA\Response(response=404, description="Transaction Not Found"),
+     *     @OA\Response(response=422, description="Validation error")
+     * )
+     */
     public function update(Request $request, int $id)
     {
         $transaction = Transaction::find($id);
@@ -122,6 +181,17 @@ class TransactionController extends Controller
         return response()->json(['message' => 'Transaction Updated Successfully']);
     }
 
+    /**
+     * @OA\Delete(
+     *     path="/transactions/{id}",
+     *     tags={"Transactions"},
+     *     summary="Delete a transaction",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Transaction Deleted Successfully"),
+     *     @OA\Response(response=404, description="Transaction Not Found")
+     * )
+     */
     public function destroy(int $id)
     {
         $transaction = Transaction::find($id);
@@ -135,6 +205,17 @@ class TransactionController extends Controller
         return response()->json(['message' => 'Transaction Deleted Successfully']);
     }
 
+    /**
+     * @OA\Get(
+     *     path="/transactions/{id}",
+     *     tags={"Transactions"},
+     *     summary="Get a transaction by ID",
+     *     security={{"bearerAuth":{}}},
+     *     @OA\Parameter(name="id", in="path", required=true, @OA\Schema(type="integer")),
+     *     @OA\Response(response=200, description="Transaction details"),
+     *     @OA\Response(response=404, description="Transaction Not Found")
+     * )
+     */
     public function show(int $id)
     {
         $transaction = Transaction::with('category')->find($id);
